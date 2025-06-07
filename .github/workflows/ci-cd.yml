@@ -1,5 +1,5 @@
 # .github/workflows/cics.yaml
-name: Simulare CI-CD laborator
+name: CI/CD Laborator
 
 on:
   push:
@@ -9,51 +9,39 @@ on:
 
 jobs:
   simulate-ci-cd:
-    name: Rulează linters + simulare deploy
+    name: Rulează linters și simulare deploy
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
 
     steps:
-    # 1. Checkout
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Instalează yamllint pentru validarea fișierelor K8s
     - name: Install yamllint
       run: |
         sudo apt-get update -y
         sudo apt-get install -y yamllint
 
-    # 3. Validare manifest-uri Kubernetes
-    - name: Validate Kubernetes YAML
+    - name: Validare fișiere YAML
       run: |
-        echo "🔍 Validăm fișierele din k8s/"
         yamllint k8s/
 
-    # 4. Lint pentru PHP (opțional, rulează doar dacă găsește fișiere .php)
-    - name: PHP syntax check
+    - name: Verificare sintaxă PHP
       if: ${{ hashFiles('php/**/*.php') != '' }}
       run: |
-        echo "🔍 Verificăm sintaxa PHP"
         find php -type f -name '*.php' -print0 | xargs -0 -I{} php -l {}
 
-    # 5. Build local al imaginii Docker (opțional)
-    - name: Build local Docker image "inter_cloud-web"
+    - name: Build imagine Docker "inter_cloud-web"
       if: ${{ hashFiles('**/Dockerfile') != '' }}
       run: |
-        echo "🐳 Construim imaginea locală inter_cloud-web (nu o publicăm)"
         docker build -t inter_cloud-web .
 
-    # 6. “Deploy” (simulat) – doar afișăm comenzile kubectl
-    - name: Simulate Kubernetes deploy
+    - name: Simulare deploy Kubernetes
       run: |
-        echo "::group::Simulăm kubectl apply"
         echo "kubectl apply -f k8s/mysql-initdb-config.yaml"
         echo "kubectl apply -f k8s/mysql-deployment.yaml"
         echo "kubectl apply -f k8s/mysql-service.yaml"
         echo "kubectl apply -f k8s/web-deployment.yaml"
         echo "kubectl apply -f k8s/web-service.yaml"
-        echo "::endgroup::"
-        echo "✅ Deployment simulat cu succes!"
